@@ -2,60 +2,95 @@
     'use strict';
 
     /**
-     * Greed object
+     * Greed namespace
      */
-    var Greed = {
+    var Greed = {};
+
+    /**
+     * Greed options
+     *
+     * @param <object> greed
+     * @param <object> options
+     */
+    Greed.options = function(greed, options){
+
         /**
-         * Container object
+         * Greed object
          */
-        container: null,
+        var greed = greed;
+
+        /**
+         * Default greed options
+         */
+        var defaultOptions = {
+            maxRows: 1000,
+            debug: false
+        };
+
+        /**
+         * Options
+         */
+        var options = $.extend(defaultOptions, options);
+
+        /**
+         * Get option or options array
+         */
+        this.get = function(name){
+            if(name != undefined){
+                return options[name];
+            }
+            return options;
+        }
+
+        /**
+         * Set option or options array
+         */
+        this.set = function(name, value){
+            if(typeof(name) == 'object'){
+                options = $.extend(options, name);
+            }
+            if(typeof(name) == 'string'){
+                options.name = value;
+            }
+        }
+    };
+
+    /**
+     * Greed table object
+     *
+     * @param <object> greed
+     * @param <object> data
+     */
+    Greed.table = function(greed, data){
+        /**
+         * Greed object
+         */
+        var greed = greed;
 
         /**
          * Data
          */
-        data: [],
+        var data = data;
 
         /**
-         * Greed parameters
-         * @var {object}
+         * Number of columns
          */
-        params: {
-            maxRows: 1000,
-            debug: false
-        },
+        var cols = 0;
 
         /**
-         * Columns count
+         * Number of rows
          */
-        cols: 0,
-
-        /**
-         * Rows count
-         */
-        rows: 0
-    };
-
-    /**
-     * Greed object
-     * @param <object> object
-     * @param <object> data
-     * @param <object> parameters
-     */
-    Greed.table = function(object, data, parameters){
-
-        Greed.container = object;
-        Greed.data = data;
+        var rows = 0;
 
         /**
          * Table object
          */
-        this.table = null;
+        var table = null;
 
         /**
          * Initialization.
          */
         this.init = function(){
-            Greed.container.addClass('Greed');
             this.calcSize();
             this.createTable();
         };
@@ -64,11 +99,11 @@
          * Creates table element.
          */
         this.createTable = function(){
-            this.table = $('<TABLE>');
-            this.table.addClass('datagrid');
-            Greed.container.append(this.table);
-            for(var row=0; row<Greed.rows; row++){
-                this.addRow(Greed.data[row]);
+            table = $('<TABLE>');
+            table.addClass('datagrid');
+            greed.container.append(table);
+            for(var row=0; row < rows; row++){
+                this.addRow(data[row]);
             }
         }
 
@@ -76,17 +111,17 @@
          * Calculate table dimensions.
          */
         this.calcSize = function(){
-            console.log(Greed.params);
-            Greed.rows = typeof(Greed.params.rows) != 'undefined' ? Greed.params.rows : Greed.data.length;
-            if(typeof(Greed.params.cols) == 'undefined'){
-                Greed.cols = 0;
-                for(var i=0; i<Greed.rows; i++){
-                    if(Greed.data[i].length > Greed.cols){
-                        Greed.cols = Greed.data[i].length;
+            var options = greed.options.get();
+            rows = typeof(options.rows) != 'undefined' ? options.rows : data.length;
+            if(typeof(options.cols) == 'undefined'){
+                cols = 0;
+                for(var i=0; i<rows; i++){
+                    if(data[i].length > cols){
+                        cols = data[i].length;
                     }
                 }
             }else{
-                Greed.cols = Greed.params.cols;
+                cols = options.cols;
             }
         }
 
@@ -95,7 +130,7 @@
          */
         this.addRow = function(rowData){
             var row = $('<TR>');
-            for(var i=0; i<Greed.cols; i++){
+            for(var i=0; i < cols; i++){
                 var cell = $('<TD>');
                 if(typeof(rowData) == 'undefined'){
                     rowData = [];
@@ -103,18 +138,42 @@
                 cell.text(typeof(rowData[i]) != 'undefined' ? rowData[i] : '');
                 row.append(cell);
             }
-            this.table.append(row);
+            table.append(row);
         }
-
-        $.extend(Greed.params, parameters)
-        this.init();
     };
 
-    $.fn.greed = function(data, parameters){
-        this.greed = new Greed.table(this, data, parameters);
+    $.fn.greed = function(data, options){
+        if(!this[0].greed){
 
-        if(this[0].nodeName == 'TABLE'){
-            // table mode
+            this.addClass('Greed');
+
+            var greed = {};
+
+            greed.container = this;
+
+            // + greed.data
+            // + greed.history
+
+            greed.options = new Greed.options(greed, options);
+            greed.table = new Greed.table(greed, data);
+
+            // + greed.cursor
+            // + greed.selection
+            // + greed.clipboard
+            // + greed.events
+            // + greed.headers
+
+            // Initialize table
+            greed.table.init();
+            this[0].greed = greed;
+
+            /*
+            if(this[0].nodeName == 'TABLE'){
+                // table mode
+            }
+            */
+        }else{
+            return this[0].greed;
         }
         return this;
     };

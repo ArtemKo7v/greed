@@ -5,7 +5,8 @@
         <script src="jquery.greed.js"></script>
     </head>
     <body>
-        <div id="greed"></div>
+        <div id="greed1"></div>
+        <div id="greed2"></div>
         <script>
             var data = [
                 ['data 1 - 1', 'data 1 - 2', 'data 1 - 3'],
@@ -34,7 +35,9 @@
                 maxRows: 500
             };
 
-            $('#greed').greed(data, parameters);
+            var greed1 = $('#greed1').greed(data, parameters);
+            var greed2 = $('#greed2').greed(data, {});
+
         </script>
     </body>
 </html>
