@@ -105,6 +105,9 @@
         }
     };
 
+    /**
+     * Cursor handler.
+     */
     Greed.cursor = function(greed){
         /**
          * Greed object
@@ -129,20 +132,69 @@
             row: 0
         };
 
+        /**
+         * Initialize object
+         */
         this.init = function(){
             div = $('<DIV>');
             div.addClass('cursor');
             greed.container.append(div);
         }
 
-
+        /**
+         * Place cursor
+         */
         this.place = function(col, row){
             position.col = col;
             position.row = row;
             active = true;
             this.redraw();
+            greed.input.focus();
         }
 
+        /**
+         * Move to the left
+         */
+        this.moveLeft = function(){
+            if(position.col > 0){
+                position.col--;
+            }
+            this.redraw();
+        }
+
+        /**
+         * Move to the right
+         */
+        this.moveRight = function(){
+            if(position.col < greed.options.get('cols') - 1){
+                position.col++;
+            }
+            this.redraw();
+        }
+
+        /**
+         * Move cursor up
+         */
+        this.moveUp = function(){
+            if(position.row > 0){
+                position.row--;
+            }
+            this.redraw();
+        }
+
+        /**
+         * Move cursor down
+         */
+        this.moveDown = function(){
+            if(position.row < greed.options.get('rows') - 1){
+                position.row++;
+            }
+            this.redraw();
+        }
+
+        /**
+         * Redraw cursor
+         */
         this.redraw = function(){
             var curCell = greed.table.getCell(position.col, position.row);
             var pos = curCell.offset();
@@ -152,13 +204,98 @@
             div.width(curCell.outerWidth() - 4);
             div.height(curCell.outerHeight() - 4);
             div.show();
+            greed.input.focus();
         }
 
+        /**
+         * Hide cursor
+         */
         this.hide = function(){
             active = false;
             div.hide();
         }
     }
+
+    /**
+     * Keyboard input.
+     */
+    Greed.input = function(greed){
+
+        /**
+         * Greed object
+         */
+        var greed = greed;
+
+        /**
+         * Hidden textarea object
+         */
+        var textarea = null;
+
+        /**
+         * Initialize keyboard input element
+         */
+        this.init = function(){
+            var div = $('<DIV>');
+            div.addClass('input');
+            textarea = $('<TEXTAREA>');
+            div.append(textarea);
+            greed.container.append(div);
+            textarea.keydown(onKeyDown);
+            textarea.bind('blur', function(_greed){
+                return function(e){
+                    _greed.cursor.hide();
+                }
+            }(greed));
+        }
+
+        /**
+         * Set focus, catch keypresses
+         */
+        this.focus = function(){
+            textarea.val('');
+            textarea.focus();
+        }
+
+        /**
+         * Remove focus, stop catch keypresses
+         */
+        this.blur = function(){
+            textarea.blur();
+        }
+
+        /**
+         * Keyboard handler
+         */
+        var onKeyDown = function(e){
+
+            // Key codes map
+            var keyCodes = {
+                arrowLeft   : 37,
+                arrowUp     : 38,
+                arrowRight  : 39,
+                arrowDown   : 40
+            };
+
+            switch(e.which){
+                case keyCodes.arrowUp:
+                    greed.cursor.moveUp();
+                    break;
+                case keyCodes.arrowDown:
+                    greed.cursor.moveDown();
+                    break;
+                case keyCodes.arrowLeft:
+                    greed.cursor.moveLeft();
+                    break;
+                case keyCodes.arrowRight:
+                    greed.cursor.moveRight();
+                    break;
+                default:
+                    console.log(e.which);
+            }
+            e.preventDefault();
+        }
+    }
+
 
     /**
      * Greed table object
@@ -239,10 +376,6 @@
                     }
                 }
             }(greed));
-
-            $(window).keydown(function(e){
-               console.log(e);
-            });
         }
 
         /**
@@ -266,10 +399,13 @@
                         cols = data[i].length;
                     }
                 }
-                options.cols = cols;
             }else{
                 cols = options.cols;
             }
+            greed.options.set({
+                cols: cols,
+                rows: rows
+            });
         }
 
         /**
@@ -339,6 +475,7 @@
 
             greed.options   = new Greed.options(greed, options);
             greed.columns   = new Greed.columns(greed);
+            greed.input     = new Greed.input(greed);
             greed.table     = new Greed.table(greed, data);
             greed.cursor    = new Greed.cursor(greed);
 
@@ -351,6 +488,7 @@
             this[0].greed = greed;
 
             greed.cursor.init();
+            greed.input.init();
 
             Greed.instances.push(greed);
 
